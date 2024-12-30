@@ -7,7 +7,7 @@ type Props = {
     icon: LucideIcon,
     label: string,
     href?: string,
-}
+};
 
 export function NavButton({
     icon: Icon,
