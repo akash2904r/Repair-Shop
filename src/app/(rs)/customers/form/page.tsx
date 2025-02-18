@@ -4,6 +4,18 @@ import * as Sentry from "@sentry/nextjs";
 import { BackButton } from "@/components/BackButton";
 import CustomerForm from "@/app/(rs)/customers/form/CustomerForm";
 
+export async function generateMetadata({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | undefined }>
+}) {
+    const { customerId } = await searchParams;
+
+    if (!customerId) return { title: "New Customer" };
+
+    return { title: `Edit Customer #${customerId}` };
+}
+
 export default async function CustomerFromPage({
     searchParams,
 }: {
