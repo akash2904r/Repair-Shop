@@ -3,6 +3,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { useAction } from "next-safe-action/hooks";
+import { toast } from "sonner";
+import { LoaderCircle } from "lucide-react";
 
 import {
     insertCustomerSchema,
@@ -11,6 +14,7 @@ import {
 } from "@/zod-schemas/customer";
 
 import { StatesArray } from "@/constants/StatesArray";
+import { saveCustomerAction } from "@/app/actions/saveCustomerAction";
 
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -19,6 +23,7 @@ import { InputWithLabel } from "@/components/inputs/InputWithLabel";
 import { TextAreaWithLabel } from "@/components/inputs/TextAreaWithLabel";
 import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
 import { CheckboxWithLabel } from "@/components/inputs/CheckboxWithLabel";
+import { DisplayServerActionResponse } from "@/components/DisplayServerActionResponse";
 
 type Props = {
     customer?: selectCustomerSchemaType,
@@ -56,12 +61,32 @@ export default function CustomerForm({ customer }: Props) {
         defaultValues,
     });
 
+    const {
+        execute: executeSave,
+        result: saveResult,
+        isExecuting: isSaving,
+        reset: resetSaveAction,
+    } = useAction(saveCustomerAction, {
+        onSuccess({ data }) {
+            toast("Success! 🎉", {
+                description: data?.message,
+            });
+        },
+        onError({ error }) {
+            toast.error("Error", {
+                description: "Save Failed",
+            });
+        }
+    });
+
     async function submitForm(data: insertCustomerSchemaType) {
-        console.log(data);
+        // console.log(data);
+        executeSave(data);
     }
 
     return (
         <div className="flex flex-col gap-1 sm:px-8">
+            <DisplayServerActionResponse result={saveResult} />
             <div>
                 <h2 className="text-2xl font-bold">
                     {customer?.id ? "Edit" : "New"} Customer {customer?.id ? `#${customer.id}` : "Form"}
@@ -138,14 +163,23 @@ export default function CustomerForm({ customer }: Props) {
                                 className="w-3/4"
                                 variant="default"
                                 title="Save"
+                                disabled={isSaving}
                             >
-                                Save
+                                {isSaving ? (
+                                    <>
+                                        <LoaderCircle className="animate-spin" />
+                                        Saving
+                                    </>
+                                ) : "Save"}
                             </Button>
                             <Button
                                 type="button"
                                 variant="destructive"
                                 title="Reset"
-                                onClick={() => form.reset(defaultValues)}
+                                onClick={() => {
+                                    form.reset(defaultValues);
+                                    resetSaveAction();
+                                }}
                             >
                                 Reset
                             </Button>
